@@ -2,57 +2,50 @@ package ibmmq
 
 import (
 	"context"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"net"
-	"net/http"
+	"github.com/ibm-messaging/mq-golang/v5/ibmmq"
 	"time"
 )
 
-type HttpHealthService struct {
-	name    string
-	url     string
-	timeout time.Duration
+type IBMHealthService struct {
+	name       string
+	connection *ibmmq.MQQueueManager
+	topic      string
+	timeout    time.Duration
 }
 
-func NewHttpHealthService(name, url string, timeout time.Duration) *HttpHealthService {
-	return &HttpHealthService{name, url, timeout}
+var qObject ibmmq.MQObject
+
+func NewDefaultIBMHealthService(connection *ibmmq.MQQueueManager, topic string) *IBMHealthService {
+	return &IBMHealthService{"IBM", connection, topic, 5 * time.Second}
 }
 
-func NewDefaultHttpHealthService(name, url string) *HttpHealthService {
-	return &HttpHealthService{name, url, 5 * time.Second}
+func NewIBMHealthService(name string, connection *ibmmq.MQQueueManager, topic string, timeout time.Duration) *IBMHealthService {
+	return &IBMHealthService{name, connection, topic, timeout}
 }
 
-func (s *HttpHealthService) Name() string {
+func (s *IBMHealthService) Name() string {
 	return s.name
 }
 
-func (s *HttpHealthService) Check(ctx context.Context) (map[string]interface{}, error) {
+func (s *IBMHealthService) Check(ctx context.Context) (map[string]interface{}, error) {
 	res := make(map[string]interface{})
-	client := http.Client{
-		Timeout: s.timeout,
-		// never follow redirects
-		CheckRedirect: func(*http.Request, []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
+	mqsd := ibmmq.NewMQSD()
+	mqsd.Options = ibmmq.MQSO_CREATE |
+		ibmmq.MQSO_NON_DURABLE |
+		ibmmq.MQSO_MANAGED
+	mqsd.ObjectString = s.topic
+	subscriptionObject, err := s.connection.Sub(mqsd, &qObject)
+	if err != nil {
+		return nil, err
 	}
-	resp, err := client.Get(s.url)
-	if e, ok := err.(net.Error); ok && e.Timeout() {
-		return res, fmt.Errorf("time out: %w", e)
-	} else if err != nil {
-		return res, err
+	err = subscriptionObject.Close(0)
+	if err != nil {
+		return nil, err
 	}
-	_, _ = io.Copy(ioutil.Discard, resp.Body)
-	_ = resp.Body.Close()
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		return res, nil
-	} else {
-		return res, fmt.Errorf("status code is: %d", resp.StatusCode)
-	}
+	return res, nil
 }
 
-func (s *HttpHealthService) Build(ctx context.Context, data map[string]interface{}, err error) map[string]interface{} {
+func (s *IBMHealthService) Build(ctx context.Context, data map[string]interface{}, err error) map[string]interface{} {
 	if err == nil {
 		return data
 	}
