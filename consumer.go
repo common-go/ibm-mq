@@ -2,9 +2,8 @@ package ibmmq
 
 import (
 	"context"
-	"fmt"
+	"github.com/common-go/mq"
 	"github.com/ibm-messaging/mq-golang/v5/ibmmq"
-	"strings"
 )
 
 type Consumer struct {
@@ -24,7 +23,7 @@ func NewConsumerByConfig(c QueueConfig, auth MQAuth) (*Consumer, error) {
 	}
 	return &Consumer{QueueManager: mgr, QueueName: c.QueueName}, nil
 }
-func (c *Consumer) Consume(ctx context.Context) {
+func (c *Consumer) Consume(ctx context.Context, caller mq.ConsumerCaller) {
 	// Create the Object Descriptor that allows us to give the topic name
 	sd := ibmmq.NewMQSD()
 	sd.Options = ibmmq.MQSO_CREATE |
@@ -35,12 +34,10 @@ func (c *Consumer) Consume(ctx context.Context) {
 
 	// The qObject is filled in with a reference to the queue created automatically
 	// for publications. It will be used in a moment for the Get operations
-	_, err := c.QueueManager.Sub(sd, &qObjectForC)
+	_, er0 := c.QueueManager.Sub(sd, &qObjectForC)
 
 	msgAvail := true
-	for msgAvail == true && err == nil {
-		var dataLen int
-
+	for msgAvail == true && er0 == nil {
 		// The GET requires control structures, the Message Descriptor (MQMD)
 		// and Get Options (MQGMO). Create those with default values.
 		md := ibmmq.NewMQMD()
@@ -57,20 +54,23 @@ func (c *Consumer) Consume(ctx context.Context) {
 		// Create a buffer for the message data. This one is large enough
 		// for the messages put by the amqsput sample.
 		buffer := make([]byte, 1024)
-		dataLen, err = qObjectForC.Get(md, gmo, buffer)
+		_, er1 := qObjectForC.Get(md, gmo, buffer)
 
-		if err != nil {
+		if er1 != nil {
 			msgAvail = false
-			fmt.Println(err)
-			mqReturn := err.(*ibmmq.MQReturn)
-			if mqReturn.MQRC == ibmmq.MQRC_NO_MSG_AVAILABLE {
+			mqReturn := er1.(*ibmmq.MQReturn)
+			if mqReturn.MQRC != ibmmq.MQRC_NO_MSG_AVAILABLE {
+				caller.Call(ctx, nil, er1)
+			} else {
 				// If there's no message available, then I won't treat that as a real error as
 				// it's an expected situation
-				err = nil
+				er1 = nil
 			}
 		} else {
-			fmt.Printf("Got message of length %d: ", dataLen)
-			fmt.Println(strings.TrimSpace(string(buffer[:dataLen])))
+			msg := mq.Message{
+				Data:       buffer,
+			}
+			caller.Call(ctx, &msg, nil)
 		}
 	}
 }
