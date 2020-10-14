@@ -2,36 +2,42 @@ package ibmmq
 
 import (
 	"context"
-	"fmt"
 	"github.com/ibm-messaging/mq-golang/v5/ibmmq"
 )
 
 type Producer struct {
-	Conn *ibmmq.MQQueueManager
-
-	Topic string
+	QueueManager *ibmmq.MQQueueManager
+	QueueName    string
 }
 
-func NewProducer(conn *ibmmq.MQQueueManager, topic string) *Producer {
-	return &Producer{conn, topic}
+func NewProducer(manager *ibmmq.MQQueueManager, queueName string) *Producer {
+	return &Producer{manager, queueName}
+}
+
+func NewProducerByConfig(c QueueConfig, auth MQAuth) (*Producer, error) {
+	mgr, err := NewQueueManagerByConfig(c, auth)
+	if err != nil {
+		return nil, err
+	}
+	return &Producer{
+		QueueManager: mgr,
+		QueueName:    c.QueueName,
+	}, nil
 }
 
 var qObjectForP ibmmq.MQObject
 
 func (p *Producer) Produce(ctx context.Context, data []byte) (string, error) {
-
 	openOptions := ibmmq.MQOO_OUTPUT
-	mqod := ibmmq.NewMQOD()
-	mqod.ObjectType = ibmmq.MQOT_TOPIC
-	mqod.ObjectString = p.Topic
+	od := ibmmq.NewMQOD()
+	od.ObjectType = ibmmq.MQOT_Q
+	od.ObjectName = p.QueueName
 
-	topicObject, err := p.Conn.Open(mqod, openOptions)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("Publishing message to", p.Topic)
+	topicObject, er1 := p.QueueManager.Open(od, openOptions)
+	if er1 != nil {
+		return "", er1
 	}
-	putMQMD := ibmmq.NewMQMD()
+	md := ibmmq.NewMQMD()
 	pmo := ibmmq.NewMQPMO()
 
 	// The default options are OK, but it's always
@@ -40,9 +46,9 @@ func (p *Producer) Produce(ctx context.Context, data []byte) (string, error) {
 	pmo.Options = ibmmq.MQPMO_NO_SYNCPOINT
 
 	// Tell MQ what the message body format is. In this case, a text string
-	putMQMD.Format = ibmmq.MQFMT_STRING
+	md.Format = ibmmq.MQFMT_STRING
 
 	// Now put the message to the queue
-	err = topicObject.Put(putMQMD, pmo, data)
-	return "", err
+	er2 := topicObject.Put(md, pmo, data)
+	return "", er2
 }

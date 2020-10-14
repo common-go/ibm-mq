@@ -8,30 +8,34 @@ import (
 )
 
 type Consumer struct {
-	Conn   *ibmmq.MQQueueManager
-	Topic  string
-	Header bool
+	QueueManager *ibmmq.MQQueueManager
+	QueueName    string
 }
 
 var qObjectForC ibmmq.MQObject
 
-func NewConsumer(conn *ibmmq.MQQueueManager, topic string, header bool) *Consumer {
-	return &Consumer{conn, topic, header}
+func NewConsumer(manager *ibmmq.MQQueueManager, queueName string) *Consumer {
+	return &Consumer{manager, queueName}
 }
-
+func NewConsumerByConfig(c QueueConfig, auth MQAuth) (*Consumer, error) {
+	mgr, err := NewQueueManagerByConfig(c, auth)
+	if err != nil {
+		return nil, err
+	}
+	return &Consumer{QueueManager: mgr, QueueName: c.QueueName}, nil
+}
 func (c *Consumer) Consume(ctx context.Context) {
-
 	// Create the Object Descriptor that allows us to give the topic name
-	mqsd := ibmmq.NewMQSD()
-	mqsd.Options = ibmmq.MQSO_CREATE |
+	sd := ibmmq.NewMQSD()
+	sd.Options = ibmmq.MQSO_CREATE |
 		ibmmq.MQSO_NON_DURABLE |
 		ibmmq.MQSO_MANAGED
 
-	mqsd.ObjectString = c.Topic
+	sd.ObjectString = c.QueueName
 
 	// The qObject is filled in with a reference to the queue created automatically
 	// for publications. It will be used in a moment for the Get operations
-	_, err := c.Conn.Sub(mqsd, &qObjectForC)
+	_, err := c.QueueManager.Sub(sd, &qObjectForC)
 
 	msgAvail := true
 	for msgAvail == true && err == nil {
@@ -39,7 +43,7 @@ func (c *Consumer) Consume(ctx context.Context) {
 
 		// The GET requires control structures, the Message Descriptor (MQMD)
 		// and Get Options (MQGMO). Create those with default values.
-		getMQMD := ibmmq.NewMQMD()
+		md := ibmmq.NewMQMD()
 		gmo := ibmmq.NewMQGMO()
 
 		// The default options are OK, but it's always
@@ -53,7 +57,7 @@ func (c *Consumer) Consume(ctx context.Context) {
 		// Create a buffer for the message data. This one is large enough
 		// for the messages put by the amqsput sample.
 		buffer := make([]byte, 1024)
-		dataLen, err = qObjectForC.Get(getMQMD, gmo, buffer)
+		dataLen, err = qObjectForC.Get(md, gmo, buffer)
 
 		if err != nil {
 			msgAvail = false
