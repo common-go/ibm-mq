@@ -6,71 +6,92 @@ import (
 	"github.com/ibm-messaging/mq-golang/v5/ibmmq"
 )
 
+type ConsumerConfig struct {
+	ManagerName    string `mapstructure:"manager_name"`
+	ChannelName    string `mapstructure:"channel_name"`
+	ConnectionName string `mapstructure:"connection_name"`
+	QueueName      string `mapstructure:"queue_name"`
+	WaitInterval   int32  `mapstructure:"wait_interval"`
+}
+
 type Consumer struct {
 	QueueManager *ibmmq.MQQueueManager
 	QueueName    string
+	sd           *ibmmq.MQSD
+	md           *ibmmq.MQMD
+	gmo          *ibmmq.MQGMO
 }
 
 var qObjectForC ibmmq.MQObject
 
-func NewConsumer(manager *ibmmq.MQQueueManager, queueName string) *Consumer {
-	return &Consumer{manager, queueName}
-}
-func NewConsumerByConfig(c QueueConfig, auth MQAuth) (*Consumer, error) {
-	mgr, err := NewQueueManagerByConfig(c, auth)
+func NewConsumerByConfig(c ConsumerConfig, auth MQAuth) (*Consumer, error) {
+	c2 := QueueConfig{
+		ManagerName:    c.ManagerName,
+		ChannelName:    c.ChannelName,
+		ConnectionName: c.ConnectionName,
+		QueueName:      c.QueueName,
+	}
+	mgr, err := NewQueueManagerByConfig(c2, auth)
 	if err != nil {
 		return nil, err
 	}
-	return &Consumer{QueueManager: mgr, QueueName: c.QueueName}, nil
+	return NewConsumer(mgr, c.QueueName, c.WaitInterval), nil
 }
-func (c *Consumer) Consume(ctx context.Context, caller mq.ConsumerCaller) {
-	// Create the Object Descriptor that allows us to give the topic name
+func NewConsumer(mgr *ibmmq.MQQueueManager, queueName string, waitInterval int32) *Consumer {
 	sd := ibmmq.NewMQSD()
 	sd.Options = ibmmq.MQSO_CREATE |
 		ibmmq.MQSO_NON_DURABLE |
 		ibmmq.MQSO_MANAGED
 
-	sd.ObjectString = c.QueueName
+	sd.ObjectString = queueName
+	return NewConsumerByMQSD(mgr, queueName, sd, waitInterval)
+}
+func NewConsumerByMQSD(manager *ibmmq.MQQueueManager, queueName string, sd *ibmmq.MQSD, waitInterval int32) *Consumer {
+	md := ibmmq.NewMQMD()
+
+	// The GET requires control structures, the Message Descriptor (MQMD)
+	// and Get Options (MQGMO). Create those with default values.
+	gmo := ibmmq.NewMQGMO()
+	// The default options are OK, but it's always
+	// a good idea to be explicit about transactional boundaries as
+	// not all platforms behave the same way.
+	gmo.Options = ibmmq.MQGMO_NO_SYNCPOINT
+	// Set options to wait for a maximum of 3 seconds for any new message to arrive
+	gmo.Options |= ibmmq.MQGMO_WAIT
+	gmo.WaitInterval = waitInterval // The WaitInterval is in milliseconds
+	return &Consumer{manager, queueName, sd, md, gmo}
+}
+
+func (c *Consumer) Consume(ctx context.Context, caller mq.ConsumerCaller) {
+	// Create the Object Descriptor that allows us to give the topic name
 
 	// The qObject is filled in with a reference to the queue created automatically
 	// for publications. It will be used in a moment for the Get operations
-	_, er0 := c.QueueManager.Sub(sd, &qObjectForC)
+	_, err := c.QueueManager.Sub(c.sd, &qObjectForC)
 
 	msgAvail := true
-	for msgAvail == true && er0 == nil {
-		// The GET requires control structures, the Message Descriptor (MQMD)
-		// and Get Options (MQGMO). Create those with default values.
-		md := ibmmq.NewMQMD()
-		gmo := ibmmq.NewMQGMO()
-
-		// The default options are OK, but it's always
-		// a good idea to be explicit about transactional boundaries as
-		// not all platforms behave the same way.
-		gmo.Options = ibmmq.MQGMO_NO_SYNCPOINT
-		// Set options to wait for a maximum of 3 seconds for any new message to arrive
-		gmo.Options |= ibmmq.MQGMO_WAIT
-		gmo.WaitInterval = 3 * 1000 // The WaitInterval is in milliseconds
-
+	for msgAvail == true && err == nil {
 		// Create a buffer for the message data. This one is large enough
 		// for the messages put by the amqsput sample.
 		buffer := make([]byte, 1024)
-		_, er1 := qObjectForC.Get(md, gmo, buffer)
+		_, err = qObjectForC.Get(c.md, c.gmo, buffer)
 
-		if er1 != nil {
+		if err != nil {
 			msgAvail = false
-			mqReturn := er1.(*ibmmq.MQReturn)
+			mqReturn := err.(*ibmmq.MQReturn)
 			if mqReturn.MQRC != ibmmq.MQRC_NO_MSG_AVAILABLE {
-				caller.Call(ctx, nil, er1)
+				caller.Call(ctx, nil, err)
 			} else {
 				// If there's no message available, then I won't treat that as a real error as
 				// it's an expected situation
-				er1 = nil
+				err = nil
 			}
 		} else {
+			msgAvail = true
 			msg := mq.Message{
-				Data:       buffer,
+				Data: buffer,
 			}
-			caller.Call(ctx, &msg, nil)
+			caller.Call(ctx, &msg, err)
 		}
 	}
 }
