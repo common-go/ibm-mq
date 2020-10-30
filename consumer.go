@@ -31,7 +31,7 @@ func NewConsumerByConfig(c ConsumerConfig, auth MQAuth) (*Consumer, error) {
 		ConnectionName: c.ConnectionName,
 		QueueName:      c.QueueName,
 	}
-	mgr, err := NewQueueManagerByConfig(c2, auth)
+	mgr, err := newQueueManagerByConfig(c2, auth)
 	if err != nil {
 		return nil, err
 	}

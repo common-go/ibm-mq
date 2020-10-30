@@ -15,7 +15,7 @@ func NewProducer(manager *ibmmq.MQQueueManager, queueName string) *Producer {
 }
 
 func NewProducerByConfig(c QueueConfig, auth MQAuth) (*Producer, error) {
-	mgr, err := NewQueueManagerByConfig(c, auth)
+	mgr, err := newQueueManagerByConfig(c, auth)
 	if err != nil {
 		return nil, err
 	}
