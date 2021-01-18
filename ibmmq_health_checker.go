@@ -16,7 +16,7 @@ type IBMMQHealthChecker struct {
 var qObject ibmmq.MQObject
 
 func NewHealthChecker(connection *ibmmq.MQQueueManager, topic string) *IBMMQHealthChecker {
-	return &IBMMQHealthChecker{"ibmmq", connection, topic, 5 * time.Second}
+	return &IBMMQHealthChecker{"ibmmq", connection, topic, 4 * time.Second}
 }
 
 func NewHealthCheckerWithTimeout(name string, connection *ibmmq.MQQueueManager, topic string, timeout time.Duration) *IBMMQHealthChecker {
