@@ -62,7 +62,7 @@ func NewConsumerByMQSD(manager *ibmmq.MQQueueManager, queueName string, sd *ibmm
 	return &Consumer{manager, queueName, sd, md, gmo}
 }
 
-func (c *Consumer) Consume(ctx context.Context, caller mq.ConsumerCaller) {
+func (c *Consumer) Consume(ctx context.Context, handle func(context.Context, *mq.Message, error) error) {
 	// Create the Object Descriptor that allows us to give the topic name
 
 	// The qObject is filled in with a reference to the queue created automatically
@@ -80,7 +80,7 @@ func (c *Consumer) Consume(ctx context.Context, caller mq.ConsumerCaller) {
 			msgAvail = false
 			mqReturn := err.(*ibmmq.MQReturn)
 			if mqReturn.MQRC != ibmmq.MQRC_NO_MSG_AVAILABLE {
-				caller.Call(ctx, nil, err)
+				handle(ctx, nil, err)
 			} else {
 				// If there's no message available, then I won't treat that as a real error as
 				// it's an expected situation
@@ -91,7 +91,7 @@ func (c *Consumer) Consume(ctx context.Context, caller mq.ConsumerCaller) {
 			msg := mq.Message{
 				Data: buffer,
 			}
-			caller.Call(ctx, &msg, err)
+			handle(ctx, &msg, err)
 		}
 	}
 }

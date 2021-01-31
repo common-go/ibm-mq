@@ -27,7 +27,7 @@ func NewProducerByConfig(c QueueConfig, auth MQAuth) (*Producer, error) {
 
 var qObjectForP ibmmq.MQObject
 
-func (p *Producer) Produce(ctx context.Context, data []byte) (string, error) {
+func (p *Producer) Produce(ctx context.Context, data []byte, attributes map[string]string) (string, error) {
 	openOptions := ibmmq.MQOO_OUTPUT
 	od := ibmmq.NewMQOD()
 	od.ObjectType = ibmmq.MQOT_Q
