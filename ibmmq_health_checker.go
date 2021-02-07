@@ -15,17 +15,23 @@ type IBMMQHealthChecker struct {
 
 var qObject ibmmq.MQObject
 
-func NewIBMMQHealthChecker(connection *ibmmq.MQQueueManager, topic string, options ...string) *IBMMQHealthChecker {
+func NewHealthChecker(connection *ibmmq.MQQueueManager, topic string, options ...string) *IBMMQHealthChecker {
 	var name string
 	if len(options) >= 1 {
 		name = options[0]
 	} else {
 		name = "ibmmq"
 	}
-	return NewHealthChecker(connection, topic, name, 4*time.Second)
+	return NewIBMMQHealthChecker(connection, topic, name, 4*time.Second)
 }
 
-func NewHealthChecker(connection *ibmmq.MQQueueManager, topic string, name string, timeout time.Duration) *IBMMQHealthChecker {
+func NewIBMMQHealthChecker(connection *ibmmq.MQQueueManager, topic string, name string, timeouts ...time.Duration) *IBMMQHealthChecker {
+	var timeout time.Duration
+	if len(timeouts) >= 1 {
+		timeout = timeouts[0]
+	} else {
+		timeout = 4 * time.Second
+	}
 	return &IBMMQHealthChecker{name, connection, topic, timeout}
 }
 
