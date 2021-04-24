@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type IBMMQHealthChecker struct {
+type HealthChecker struct {
 	name         string
 	queueManager *ibmmq.MQQueueManager
 	topic        string
@@ -15,7 +15,7 @@ type IBMMQHealthChecker struct {
 
 var qObject ibmmq.MQObject
 
-func NewHealthChecker(connection *ibmmq.MQQueueManager, topic string, options ...string) *IBMMQHealthChecker {
+func NewHealthChecker(connection *ibmmq.MQQueueManager, topic string, options ...string) *HealthChecker {
 	var name string
 	if len(options) >= 1 {
 		name = options[0]
@@ -25,21 +25,21 @@ func NewHealthChecker(connection *ibmmq.MQQueueManager, topic string, options ..
 	return NewIBMMQHealthChecker(connection, topic, name, 4*time.Second)
 }
 
-func NewIBMMQHealthChecker(connection *ibmmq.MQQueueManager, topic string, name string, timeouts ...time.Duration) *IBMMQHealthChecker {
+func NewIBMMQHealthChecker(connection *ibmmq.MQQueueManager, topic string, name string, timeouts ...time.Duration) *HealthChecker {
 	var timeout time.Duration
 	if len(timeouts) >= 1 {
 		timeout = timeouts[0]
 	} else {
 		timeout = 4 * time.Second
 	}
-	return &IBMMQHealthChecker{name, connection, topic, timeout}
+	return &HealthChecker{name, connection, topic, timeout}
 }
 
-func (s *IBMMQHealthChecker) Name() string {
+func (s *HealthChecker) Name() string {
 	return s.name
 }
 
-func (s *IBMMQHealthChecker) Check(ctx context.Context) (map[string]interface{}, error) {
+func (s *HealthChecker) Check(ctx context.Context) (map[string]interface{}, error) {
 	res := make(map[string]interface{})
 	sd := ibmmq.NewMQSD()
 	sd.Options = ibmmq.MQSO_CREATE |
@@ -57,7 +57,7 @@ func (s *IBMMQHealthChecker) Check(ctx context.Context) (map[string]interface{},
 	return res, nil
 }
 
-func (s *IBMMQHealthChecker) Build(ctx context.Context, data map[string]interface{}, err error) map[string]interface{} {
+func (s *HealthChecker) Build(ctx context.Context, data map[string]interface{}, err error) map[string]interface{} {
 	if err == nil {
 		return data
 	}
