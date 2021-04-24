@@ -10,8 +10,8 @@ import (
 )
 
 type MQAuth struct {
-	UserId   string `mapstructure:"user_id"`
-	Password string `mapstructure:"password"`
+	UserId   string `mapstructure:"user_id" json:"userId,omitempty" gorm:"column:userid" bson:"userId,omitempty" dynamodbav:"userId,omitempty" firestore:"userId,omitempty"`
+	Password string `mapstructure:"password" json:"password,omitempty" gorm:"column:password" bson:"password,omitempty" dynamodbav:"password,omitempty" firestore:"password,omitempty"`
 }
 
 func NewMQCDByChannelAndConnection(channelName string, connectionName string) *ibmmq.MQCD {
@@ -29,11 +29,11 @@ func NewMQCSPByConfig(auth MQAuth) *ibmmq.MQCSP {
 }
 
 type QueueConfig struct {
-	ManagerName    string      `mapstructure:"manager_name"`
-	ChannelName    string      `mapstructure:"channel_name"`
-	ConnectionName string      `mapstructure:"connection_name"`
-	QueueName      string      `mapstructure:"queue_name"`
-	Retry          RetryConfig `mapstructure:"retry"`
+	ManagerName    string      `mapstructure:"manager_name" json:"managerName,omitempty" gorm:"column:managername" bson:"managerName,omitempty" dynamodbav:"managerName,omitempty" firestore:"managerName,omitempty"`
+	ChannelName    string      `mapstructure:"channel_name" json:"channelName,omitempty" gorm:"column:channelname" bson:"channelName,omitempty" dynamodbav:"channelName,omitempty" firestore:"channelName,omitempty"`
+	ConnectionName string      `mapstructure:"connection_name" json:"connectionName,omitempty" gorm:"column:connectionname" bson:"connectionName,omitempty" dynamodbav:"connectionName,omitempty" firestore:"connectionName,omitempty"`
+	QueueName      string      `mapstructure:"queue_name" json:"queueName,omitempty" gorm:"column:queuename" bson:"queueName,omitempty" dynamodbav:"queueName,omitempty" firestore:"queueName,omitempty"`
+	Retry          RetryConfig `mapstructure:"retry" json:"retry,omitempty" gorm:"column:retry" bson:"retry,omitempty" dynamodbav:"retry,omitempty" firestore:"retry,omitempty"`
 }
 
 type RetryConfig struct {

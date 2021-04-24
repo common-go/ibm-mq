@@ -5,21 +5,21 @@ import (
 	"github.com/ibm-messaging/mq-golang/v5/ibmmq"
 )
 
-type Producer struct {
+type Publisher struct {
 	QueueManager *ibmmq.MQQueueManager
 	QueueName    string
 }
 
-func NewProducer(manager *ibmmq.MQQueueManager, queueName string) *Producer {
-	return &Producer{manager, queueName}
+func NewPublisher(manager *ibmmq.MQQueueManager, queueName string) *Publisher {
+	return &Publisher{manager, queueName}
 }
 
-func NewProducerByConfig(c QueueConfig, auth MQAuth) (*Producer, error) {
+func NewPublisherByConfig(c QueueConfig, auth MQAuth) (*Publisher, error) {
 	mgr, err := newQueueManagerByConfig(c, auth)
 	if err != nil {
 		return nil, err
 	}
-	return &Producer{
+	return &Publisher{
 		QueueManager: mgr,
 		QueueName:    c.QueueName,
 	}, nil
@@ -27,7 +27,7 @@ func NewProducerByConfig(c QueueConfig, auth MQAuth) (*Producer, error) {
 
 var qObjectForP ibmmq.MQObject
 
-func (p *Producer) Produce(ctx context.Context, data []byte, attributes map[string]string) (string, error) {
+func (p *Publisher) Publish(ctx context.Context, data []byte, attributes map[string]string) (string, error) {
 	openOptions := ibmmq.MQOO_OUTPUT
 	od := ibmmq.NewMQOD()
 	od.ObjectType = ibmmq.MQOT_Q

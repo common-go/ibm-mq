@@ -6,15 +6,15 @@ import (
 	"github.com/ibm-messaging/mq-golang/v5/ibmmq"
 )
 
-type ConsumerConfig struct {
-	ManagerName    string `mapstructure:"manager_name"`
-	ChannelName    string `mapstructure:"channel_name"`
-	ConnectionName string `mapstructure:"connection_name"`
-	QueueName      string `mapstructure:"queue_name"`
-	WaitInterval   int32  `mapstructure:"wait_interval"`
+type SubscriberConfig struct {
+	ManagerName    string `mapstructure:"manager_name" json:"managerName,omitempty" gorm:"column:managerName" bson:"managerName,omitempty" dynamodbav:"managerName,omitempty" firestore:"managerName,omitempty"`
+	ChannelName    string `mapstructure:"channel_name" json:"channelName,omitempty" gorm:"column:channelname" bson:"channelName,omitempty" dynamodbav:"channelName,omitempty" firestore:"channelName,omitempty"`
+	ConnectionName string `mapstructure:"connection_name" json:"connectionName,omitempty" gorm:"column:connectionname" bson:"connectionName,omitempty" dynamodbav:"connectionName,omitempty" firestore:"connectionName,omitempty"`
+	QueueName      string `mapstructure:"queue_name" json:"queueName,omitempty" gorm:"column:queuename" bson:"queueName,omitempty" dynamodbav:"queueName,omitempty" firestore:"queueName,omitempty"`
+	WaitInterval   int32  `mapstructure:"wait_interval" json:"waitInterval,omitempty" gorm:"column:waitinterval" bson:"waitInterval,omitempty" dynamodbav:"waitInterval,omitempty" firestore:"waitInterval,omitempty"`
 }
 
-type Consumer struct {
+type Subscriber struct {
 	QueueManager *ibmmq.MQQueueManager
 	QueueName    string
 	sd           *ibmmq.MQSD
@@ -24,7 +24,7 @@ type Consumer struct {
 
 var qObjectForC ibmmq.MQObject
 
-func NewConsumerByConfig(c ConsumerConfig, auth MQAuth) (*Consumer, error) {
+func NewSubscriberByConfig(c SubscriberConfig, auth MQAuth) (*Subscriber, error) {
 	c2 := QueueConfig{
 		ManagerName:    c.ManagerName,
 		ChannelName:    c.ChannelName,
@@ -35,18 +35,18 @@ func NewConsumerByConfig(c ConsumerConfig, auth MQAuth) (*Consumer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewConsumer(mgr, c.QueueName, c.WaitInterval), nil
+	return NewSubscriber(mgr, c.QueueName, c.WaitInterval), nil
 }
-func NewConsumer(mgr *ibmmq.MQQueueManager, queueName string, waitInterval int32) *Consumer {
+func NewSubscriber(mgr *ibmmq.MQQueueManager, queueName string, waitInterval int32) *Subscriber {
 	sd := ibmmq.NewMQSD()
 	sd.Options = ibmmq.MQSO_CREATE |
 		ibmmq.MQSO_NON_DURABLE |
 		ibmmq.MQSO_MANAGED
 
 	sd.ObjectString = queueName
-	return NewConsumerByMQSD(mgr, queueName, sd, waitInterval)
+	return NewSubscriberByMQSD(mgr, queueName, sd, waitInterval)
 }
-func NewConsumerByMQSD(manager *ibmmq.MQQueueManager, queueName string, sd *ibmmq.MQSD, waitInterval int32) *Consumer {
+func NewSubscriberByMQSD(manager *ibmmq.MQQueueManager, queueName string, sd *ibmmq.MQSD, waitInterval int32) *Subscriber {
 	md := ibmmq.NewMQMD()
 
 	// The GET requires control structures, the Message Descriptor (MQMD)
@@ -59,10 +59,10 @@ func NewConsumerByMQSD(manager *ibmmq.MQQueueManager, queueName string, sd *ibmm
 	// Set options to wait for a maximum of 3 seconds for any new message to arrive
 	gmo.Options |= ibmmq.MQGMO_WAIT
 	gmo.WaitInterval = waitInterval // The WaitInterval is in milliseconds
-	return &Consumer{manager, queueName, sd, md, gmo}
+	return &Subscriber{manager, queueName, sd, md, gmo}
 }
 
-func (c *Consumer) Consume(ctx context.Context, handle func(context.Context, *mq.Message, error) error) {
+func (c *Subscriber) Subscribe(ctx context.Context, handle func(context.Context, *mq.Message, error) error) {
 	// Create the Object Descriptor that allows us to give the topic name
 
 	// The qObject is filled in with a reference to the queue created automatically
