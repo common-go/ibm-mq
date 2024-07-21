@@ -2,14 +2,14 @@
 IBM MQ (formerly known as IBM WebSphere MQ and before that, MQSeries) is a robust messaging middleware platform that enables applications to communicate and exchange information securely and reliably. It is designed to facilitate the integration of different applications and systems across various platforms, ensuring that messages are delivered once and only once, even in the event of network failures or system crashes.
 
 ### Libraries for IBMMQ
-- GO: [ibmmq](https://github.com/core-go/ibmmq), to wrap and simplify [ibmmq](github.com/ibm-messaging/mq-golang/v5/ibmmq) Example is at [go-ibm-mq-sample](https://github.com/project-samples/go-ibm-mq-sample)
-- nodejs: [ibmmq-plus](https://www.npmjs.com/ibmmq-plus), to wrap and simplify [ibmmq](https://www.npmjs.com/package/ibmmq). Example is at [ibmmq-sample](https://github.com/typescript-tutorial/ibmmq-sample)
+- GO: [ibmmq](https://github.com/core-go/ibmmq), to wrap and simplify [ibmmq](https://github.com/ibm-messaging/mq-golang) Example is at [go-ibm-mq-sample](https://github.com/project-samples/go-ibm-mq-sample)
+- nodejs: [ibmmq-plus](https://www.npmjs.com/package/ibmmq-plus), to wrap and simplify [ibmmq](https://www.npmjs.com/package/ibmmq). Example is at [ibmmq-sample](https://github.com/typescript-tutorial/ibmmq-sample)
 
 #### A common flow to consume a message from a message queue
 ![A common flow to consume a message from a message queue](https://cdn-images-1.medium.com/max/800/1*Y4QUN6QnfmJgaKigcNHbQA.png)
 - The libraries to implement this flow are:
-    - [mq](https://github.com/core-go/mq) for GOLANG. Example is at [go-nats-sample](https://github.com/project-samples/go-nats-sample)
-    - [mq-one](https://www.npmjs.com/package/mq-one) for nodejs. Example is at [nats-sample](https://github.com/typescript-tutorial/nats-sample)
+    - [mq](https://github.com/core-go/mq) for GOLANG. Example is at [go-ibm-mq-sample](https://github.com/project-samples/go-ibm-mq-sample)
+    - [mq-one](https://www.npmjs.com/package/mq-one) for nodejs. Example is at [ibmmq-sample](https://github.com/typescript-tutorial/ibmmq-sample)
 
 ### Key Features of IBM MQ
 #### Reliability
