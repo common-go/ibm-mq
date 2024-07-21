@@ -1,4 +1,4 @@
-# ibmmq
+# IBMMQ
 IBM MQ (formerly known as IBM WebSphere MQ and before that, MQSeries) is a robust messaging middleware platform that enables applications to communicate and exchange information securely and reliably. It is designed to facilitate the integration of different applications and systems across various platforms, ensuring that messages are delivered once and only once, even in the event of network failures or system crashes.
 
 ### Libraries for IBMMQ
@@ -94,3 +94,15 @@ In a retail order processing system, IBM MQ can be used to integrate various com
 
 ### Conclusion
 IBM MQ is a powerful and reliable messaging middleware solution that supports a wide range of use cases across various industries. Its robustness, security features, and support for transactional workflows make it a suitable choice for mission-critical applications. However, its complexity and cost might be considerations for organizations with simpler or less demanding requirements. Understanding the strengths and capabilities of IBM MQ can help organizations make informed decisions when selecting a messaging solution for their needs.
+
+## Installation
+Please make sure to initialize a Go module before installing core-go/ibmmq:
+
+```shell
+go get -u github.com/core-go/ibmmq
+```
+
+Import:
+```go
+import "github.com/core-go/ibmmq"
+```
