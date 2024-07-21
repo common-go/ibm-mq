@@ -2,11 +2,12 @@ package ibmmq
 
 import (
 	"fmt"
-	"github.com/ibm-messaging/mq-golang/ibmmq"
 	"log"
 	"reflect"
 	"strconv"
 	"time"
+
+	"github.com/ibm-messaging/mq-golang/v5/ibmmq"
 )
 
 type MQAuth struct {
@@ -29,28 +30,29 @@ func NewMQCSPByConfig(auth MQAuth) *ibmmq.MQCSP {
 }
 
 type QueueConfig struct {
-	ManagerName    string      `mapstructure:"manager_name" json:"managerName,omitempty" gorm:"column:managername" bson:"managerName,omitempty" dynamodbav:"managerName,omitempty" firestore:"managerName,omitempty"`
-	ChannelName    string      `mapstructure:"channel_name" json:"channelName,omitempty" gorm:"column:channelname" bson:"channelName,omitempty" dynamodbav:"channelName,omitempty" firestore:"channelName,omitempty"`
-	ConnectionName string      `mapstructure:"connection_name" json:"connectionName,omitempty" gorm:"column:connectionname" bson:"connectionName,omitempty" dynamodbav:"connectionName,omitempty" firestore:"connectionName,omitempty"`
-	QueueName      string      `mapstructure:"queue_name" json:"queueName,omitempty" gorm:"column:queuename" bson:"queueName,omitempty" dynamodbav:"queueName,omitempty" firestore:"queueName,omitempty"`
-	Retry          RetryConfig `mapstructure:"retry" json:"retry,omitempty" gorm:"column:retry" bson:"retry,omitempty" dynamodbav:"retry,omitempty" firestore:"retry,omitempty"`
+	ManagerName    string      `yaml:"manager_name" mapstructure:"manager_name" json:"managerName,omitempty" gorm:"column:managername" bson:"managerName,omitempty" dynamodbav:"managerName,omitempty" firestore:"managerName,omitempty"`
+	ChannelName    string      `yaml:"channel_name" mapstructure:"channel_name" json:"channelName,omitempty" gorm:"column:channelname" bson:"channelName,omitempty" dynamodbav:"channelName,omitempty" firestore:"channelName,omitempty"`
+	ConnectionName string      `yaml:"connection_name" mapstructure:"connection_name" json:"connectionName,omitempty" gorm:"column:connectionname" bson:"connectionName,omitempty" dynamodbav:"connectionName,omitempty" firestore:"connectionName,omitempty"`
+	QueueName      string      `yaml:"queue_name" mapstructure:"queue_name" json:"queueName,omitempty" gorm:"column:queuename" bson:"queueName,omitempty" dynamodbav:"queueName,omitempty" firestore:"queueName,omitempty"`
+	Put            bool        `yaml:"put" mapstructure:"put" json:"put,omitempty" gorm:"column:queuename" bson:"put,omitempty" dynamodbav:"put,omitempty" firestore:"put,omitempty"`
+	Retry          RetryConfig `yaml:"retry" mapstructure:"retry" json:"retry,omitempty" gorm:"column:retry" bson:"retry,omitempty" dynamodbav:"retry,omitempty" firestore:"retry,omitempty"`
 }
 
 type RetryConfig struct {
-	Retry1 int64 `mapstructure:"1" json:"retry1,omitempty" gorm:"column:retry1" bson:"retry1,omitempty" dynamodbav:"retry1,omitempty" firestore:"retry1,omitempty"`
-	Retry2 int64 `mapstructure:"2" json:"retry2,omitempty" gorm:"column:retry2" bson:"retry2,omitempty" dynamodbav:"retry2,omitempty" firestore:"retry2,omitempty"`
-	Retry3 int64 `mapstructure:"3" json:"retry3,omitempty" gorm:"column:retry3" bson:"retry3,omitempty" dynamodbav:"retry3,omitempty" firestore:"retry3,omitempty"`
-	Retry4 int64 `mapstructure:"4" json:"retry4,omitempty" gorm:"column:retry4" bson:"retry4,omitempty" dynamodbav:"retry4,omitempty" firestore:"retry4,omitempty"`
-	Retry5 int64 `mapstructure:"5" json:"retry5,omitempty" gorm:"column:retry5" bson:"retry5,omitempty" dynamodbav:"retry5,omitempty" firestore:"retry5,omitempty"`
-	Retry6 int64 `mapstructure:"6" json:"retry6,omitempty" gorm:"column:retry6" bson:"retry6,omitempty" dynamodbav:"retry6,omitempty" firestore:"retry6,omitempty"`
-	Retry7 int64 `mapstructure:"7" json:"retry7,omitempty" gorm:"column:retry7" bson:"retry7,omitempty" dynamodbav:"retry7,omitempty" firestore:"retry7,omitempty"`
-	Retry8 int64 `mapstructure:"8" json:"retry8,omitempty" gorm:"column:retry8" bson:"retry8,omitempty" dynamodbav:"retry8,omitempty" firestore:"retry8,omitempty"`
-	Retry9 int64 `mapstructure:"9" json:"retry9,omitempty" gorm:"column:retry9" bson:"retry9,omitempty" dynamodbav:"retry9,omitempty" firestore:"retry9,omitempty"`
+	Retry1 int64 `yaml:"1" mapstructure:"1" json:"retry1,omitempty" gorm:"column:retry1" bson:"retry1,omitempty" dynamodbav:"retry1,omitempty" firestore:"retry1,omitempty"`
+	Retry2 int64 `yaml:"2" mapstructure:"2" json:"retry2,omitempty" gorm:"column:retry2" bson:"retry2,omitempty" dynamodbav:"retry2,omitempty" firestore:"retry2,omitempty"`
+	Retry3 int64 `yaml:"3" mapstructure:"3" json:"retry3,omitempty" gorm:"column:retry3" bson:"retry3,omitempty" dynamodbav:"retry3,omitempty" firestore:"retry3,omitempty"`
+	Retry4 int64 `yaml:"4" mapstructure:"4" json:"retry4,omitempty" gorm:"column:retry4" bson:"retry4,omitempty" dynamodbav:"retry4,omitempty" firestore:"retry4,omitempty"`
+	Retry5 int64 `yaml:"5" mapstructure:"5" json:"retry5,omitempty" gorm:"column:retry5" bson:"retry5,omitempty" dynamodbav:"retry5,omitempty" firestore:"retry5,omitempty"`
+	Retry6 int64 `yaml:"6" mapstructure:"6" json:"retry6,omitempty" gorm:"column:retry6" bson:"retry6,omitempty" dynamodbav:"retry6,omitempty" firestore:"retry6,omitempty"`
+	Retry7 int64 `yaml:"7" mapstructure:"7" json:"retry7,omitempty" gorm:"column:retry7" bson:"retry7,omitempty" dynamodbav:"retry7,omitempty" firestore:"retry7,omitempty"`
+	Retry8 int64 `yaml:"8" mapstructure:"8" json:"retry8,omitempty" gorm:"column:retry8" bson:"retry8,omitempty" dynamodbav:"retry8,omitempty" firestore:"retry8,omitempty"`
+	Retry9 int64 `yaml:"9" mapstructure:"9" json:"retry9,omitempty" gorm:"column:retry9" bson:"retry9,omitempty" dynamodbav:"retry9,omitempty" firestore:"retry9,omitempty"`
 }
 
 func NewQueueManagerWithRetries(c QueueConfig, auth MQAuth) (*ibmmq.MQQueueManager, error) {
 	if c.Retry.Retry1 <= 0 {
-		return newQueueManagerByConfig(c, auth)
+		return NewQueueManagerByConfig(c, auth)
 	} else {
 		durations := DurationsFromValue(c.Retry, "Retry", 9)
 		return NewQueueManager(c, auth, durations...)
@@ -58,16 +60,16 @@ func NewQueueManagerWithRetries(c QueueConfig, auth MQAuth) (*ibmmq.MQQueueManag
 }
 func NewQueueManager(c QueueConfig, auth MQAuth, retries ...time.Duration) (*ibmmq.MQQueueManager, error) {
 	if len(retries) == 0 {
-		return newQueueManagerByConfig(c, auth)
+		return NewQueueManagerByConfig(c, auth)
 	} else {
-		db, er1 := newQueueManagerByConfig(c, auth)
+		db, er1 := NewQueueManagerByConfig(c, auth)
 		if er1 == nil {
 			return db, er1
 		}
 		i := 0
 		err := Retry(retries, func() (err error) {
 			i = i + 1
-			db2, er2 := newQueueManagerByConfig(c, auth)
+			db2, er2 := NewQueueManagerByConfig(c, auth)
 			if er2 == nil {
 				db = db2
 			}
@@ -79,7 +81,7 @@ func NewQueueManager(c QueueConfig, auth MQAuth, retries ...time.Duration) (*ibm
 		return db, err
 	}
 }
-func newQueueManagerByConfig(c QueueConfig, auth MQAuth) (*ibmmq.MQQueueManager, error) {
+func NewQueueManagerByConfig(c QueueConfig, auth MQAuth) (*ibmmq.MQQueueManager, error) {
 	cd := NewMQCDByChannelAndConnection(c.ChannelName, c.ConnectionName)
 	csp := NewMQCSPByConfig(auth)
 
@@ -90,6 +92,7 @@ func newQueueManagerByConfig(c QueueConfig, auth MQAuth) (*ibmmq.MQQueueManager,
 
 	mgr, err := ibmmq.Connx(c.ManagerName, cno)
 	return &mgr, err
+
 }
 
 func MakeDurations(vs []int64) []time.Duration {
